@@ -1,8 +1,8 @@
 
 task downloadZipFile(type: Download) {
-    src 'https://github.com/brinkman1/junction2019/blob/tflite/detect_customized.zip'
+    src 'https://github.com/brinkman1/junction2019/raw/tflite/detect_customized.zip'
     dest new File(buildDir, 'zips/')
-    overwrite false
+    overwrite true
 }
 
 
