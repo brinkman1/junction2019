@@ -15,7 +15,9 @@ limitations under the License.
 
 package org.tensorflow.lite.examples.detection.tracking;
 
+
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -24,19 +26,34 @@ import android.graphics.Paint.Cap;
 import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.graphics.RectF;
+import android.text.Html;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Pair;
 import android.util.TypedValue;
+import android.view.Gravity;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
+import org.tensorflow.lite.examples.detection.CameraActivity;
+import org.tensorflow.lite.examples.detection.R;
 import org.tensorflow.lite.examples.detection.env.BorderedText;
 import org.tensorflow.lite.examples.detection.env.ImageUtils;
 import org.tensorflow.lite.examples.detection.env.Logger;
 import org.tensorflow.lite.examples.detection.tflite.Classifier.Recognition;
 
 /** A tracker that handles non-max suppression and matches existing objects to new detections. */
+
 public class MultiBoxTracker {
+  private static final String TAG = "MultiBoxTracker";
   private static final float TEXT_SIZE_DIP = 18;
   private static final float MIN_SIZE = 16.0f;
   private static final int[] COLORS = {
@@ -67,8 +84,10 @@ public class MultiBoxTracker {
   private int frameWidth;
   private int frameHeight;
   private int sensorOrientation;
+  AlertDialog.Builder alertDialog;
 
   public MultiBoxTracker(final Context context) {
+     alertDialog = new AlertDialog.Builder(context);
     for (final int color : COLORS) {
       availableColors.add(color);
     }
@@ -120,6 +139,9 @@ public class MultiBoxTracker {
     return frameToCanvasMatrix;
   }
 
+
+
+
   public synchronized void draw(final Canvas canvas) {
     final boolean rotated = sensorOrientation % 180 == 90;
     final float multiplier =
@@ -153,6 +175,7 @@ public class MultiBoxTracker {
           canvas, trackedPos.left + cornerSize, trackedPos.top, labelString + "%", boxPaint);
     }
   }
+
 
   private void processResults(final List<Recognition> results) {
     final List<Pair<Float, Recognition>> rectsToTrack = new LinkedList<Pair<Float, Recognition>>();
@@ -196,11 +219,40 @@ public class MultiBoxTracker {
       trackedRecognition.color = COLORS[trackedObjects.size()];
       trackedObjects.add(trackedRecognition);
 
+Log.d(TAG,"TEST TRACKED OBJECTS:"+trackedObjects.get(0).title);
+
+
       if (trackedObjects.size() >= COLORS.length) {
         break;
       }
     }
+    alertDialog.setTitle("Add item");
+    alertDialog.setMessage(Html.fromHtml("Do you want to add "+"<b>"+trackedObjects.get(0).title+"</b>?"));
+
+    alertDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+
+      public void onClick(DialogInterface dialog, int which) {
+        // Do nothing but close the dialog
+       Log.d(TAG, "YES BUTTON CLICKED");
+        dialog.dismiss();
+      }
+    });
+
+    alertDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+
+        dialog.dismiss();
+      }
+    });
+
+    AlertDialog alert = alertDialog.create();
+    alert.show();
+
   }
+
+
 
   private static class TrackedRecognition {
     RectF location;

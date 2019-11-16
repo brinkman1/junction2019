@@ -34,16 +34,20 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
 import android.media.ImageReader;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -51,7 +55,17 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -66,6 +80,9 @@ import org.tensorflow.lite.examples.detection.env.Logger;
 public class CameraConnectionFragment extends Fragment {
   private static final Logger LOGGER = new Logger();
 
+
+
+
   /**
    * The camera preview size will be chosen to be the smallest frame by pixel size capable of
    * containing a DESIRED_SIZE x DESIRED_SIZE square.
@@ -77,6 +94,7 @@ public class CameraConnectionFragment extends Fragment {
 
   private static final String FRAGMENT_DIALOG = "dialog";
   private static final String TAG = "AndroidCameraApi";
+
 
   static {
     ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -140,6 +158,7 @@ public class CameraConnectionFragment extends Fragment {
           cameraOpenCloseLock.release();
           cameraDevice = cd;
           createCameraPreviewSession();
+
         }
 
         @Override
@@ -276,7 +295,10 @@ public class CameraConnectionFragment extends Fragment {
 
   @Override
   public View onCreateView(
-      final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
+      final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState)
+
+  {
+
     return inflater.inflate(layout, container, false);
   }
 
@@ -314,14 +336,24 @@ public class CameraConnectionFragment extends Fragment {
   }
 
   public void setCamera(String cameraId) {
+
     this.cameraId = cameraId;
   }
-  protected void takePicture() {
+
+    public Handler mBackgroundHandler;
+
+
+
+
+    public void takePicture(View v) {
+      Log.d(TAG, "TakePicture Button clicked");
+
         if(null == cameraDevice) {
             Log.e(TAG, "cameraDevice is null");
             return;
         }
-        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
+        CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
         try {
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             Size[] jpegSizes = null;
@@ -342,7 +374,8 @@ public class CameraConnectionFragment extends Fragment {
             captureBuilder.addTarget(reader.getSurface());
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
             // Orientation
-            int rotation = getWindowManager().getDefaultDisplay().getRotation();
+            int rotation = getActivity().getWindowManager().getDefaultDisplay()
+                    .getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
             final File file = new File(Environment.getExternalStorageDirectory()+"/pic.jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
@@ -382,8 +415,8 @@ public class CameraConnectionFragment extends Fragment {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
-                    Toast.makeText(AndroidCameraApi.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
-                    createCameraPreview();
+                    Toast.makeText(getActivity(), "Saved:" + file, Toast.LENGTH_SHORT).show();
+                    //createCameraPreview();
                 }
             };
             cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {

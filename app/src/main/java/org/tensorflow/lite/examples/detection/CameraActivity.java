@@ -123,8 +123,8 @@ public abstract class CameraActivity extends AppCompatActivity
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     setContentView(R.layout.activity_camera);
-    takePictureButton = (Button) findViewById(R.id.button_image);
-    imageView = (ImageView) findViewById(R.id.imageview);
+    //takePictureButton = (Button) findViewById(R.id.button_image);
+    //imageView = (ImageView) findViewById(R.id.imageview);
  
     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
         takePictureButton.setEnabled(false);
@@ -396,49 +396,45 @@ public abstract class CameraActivity extends AppCompatActivity
 
   public void takePicture(View view) {
 
-    // camera2Fragment.takePicture();
+    Toast.makeText(CameraActivity.this, "Button clicked!",
+            Toast.LENGTH_LONG).show();
+takeScreenshot();
 
-    LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
-    CoordinatorLayout root = (CoordinatorLayout) inflater.inflate(R.layout.activity_camera, null);
-    root.setDrawingCacheEnabled(true);
-    View v = this.getWindow().findViewById(R.id.overall);
-    v.setDrawingCacheEnabled(true);
-    Bitmap bm = v.getDrawingCache();
-    // BitmapDrawable drawable = (BitmapDrawable) v.getDrawable();
-    // Bitmap bm = drawable.getBitmap();
-    // Bitmap bm = getBitmapFromView(this.getWindow().findViewById(R.id.overall));
-
-    OutputStream fOut = null;
+  }
+  private void takeScreenshot() {
+    Date now = new Date();
+    android.text.format.DateFormat.format("yyyy-MM-dd_hh:mm:ss", now);
 
     try {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "CameraDemo");
+      // image naming and path  to include sd card  appending name you choose for file
+      String mPath = Environment.getExternalStorageDirectory().toString() + "/" + now + ".jpg";
 
-        mediaStorageDir.mkdirs();
-        File imgMainDir = null;
+      // create bitmap screen capture
+      View v1 = getWindow().getDecorView().getRootView();
+      v1.setDrawingCacheEnabled(true);
+      Bitmap bitmap = Bitmap.createBitmap(v1.getDrawingCache());
+      v1.setDrawingCacheEnabled(false);
 
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        imgMainDir = new File(mediaStorageDir.getPath() + File.separator +
-                "IMG_"+ timeStamp + ".jpg");
-        fOut = new FileOutputStream(imgMainDir);
-        MediaScannerConnection.scanFile(this, new String[] { imgMainDir.getAbsolutePath() }, null, null);
+      File imageFile = new File(mPath);
 
-    } catch (Exception e) {
-        Toast.makeText(this, "Error occurred", Toast.LENGTH_SHORT).show();
+      FileOutputStream outputStream = new FileOutputStream(imageFile);
+      int quality = 100;
+      bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
+      outputStream.flush();
+      outputStream.close();
+
+      openScreenshot(imageFile);
+    } catch (Throwable e) {
+      // Several error may come out with file handling or DOM
+      e.printStackTrace();
     }
-
-    try {
-        bm.compress(Bitmap.CompressFormat.PNG, 100, fOut);
-        fOut.flush();
-        fOut.close();
-    } catch (Exception e) {}
-
-
-    // Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-    // file = Uri.fromFile(getOutputMediaFile());
-    // intent.putExtra(MediaStore.EXTRA_OUTPUT, file);
-    //
-    // startActivityForResult(intent, 100);
+  }
+  private void openScreenshot(File imageFile) {
+    Intent intent = new Intent();
+    intent.setAction(Intent.ACTION_VIEW);
+    Uri uri = Uri.fromFile(imageFile);
+    intent.setDataAndType(uri, "image/*");
+    startActivity(intent);
   }
 
   private static File getOutputMediaFile(){
