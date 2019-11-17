@@ -108,7 +108,7 @@ public abstract class CameraActivity extends AppCompatActivity
   private TextView threadsTextView;
   OverlayView trackingOverlay;
 
-  private Button takePictureButton;
+//  private Button takePictureButton;
   private ImageView imageView;
   private ImageView frameLay;
   private Uri file;
@@ -127,7 +127,7 @@ public abstract class CameraActivity extends AppCompatActivity
     //imageView = (ImageView) findViewById(R.id.imageview);
  
     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-        takePictureButton.setEnabled(false);
+//        takePictureButton.setEnabled(false);
         ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE }, 0);
     }
 
@@ -387,7 +387,7 @@ public abstract class CameraActivity extends AppCompatActivity
           && grantResults[0] == PackageManager.PERMISSION_GRANTED
           && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
         setFragment();
-        takePictureButton.setEnabled(true);
+//        takePictureButton.setEnabled(true);
       } else {
         requestPermission();
       }
